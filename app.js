@@ -2,10 +2,45 @@ const express = require("express");
 const app = express();
 const nodemailer = require("nodemailer");
 const PORT = 5000;
+const mongoose = require("mongoose");
+const { request } = require("express");
 
 // MIDDLEWARE
 app.use(express.static("./public"));
 app.use(express.json());
+
+const DB =
+  "mongodb+srv://blanc_sapphire:Rah_XJ276Sj436M@cluster0.bnmkp.mongodb.net/registrationData?retryWrites=true&w=majority";
+
+mongoose
+  .connect(DB)
+  .then(() => {
+    console.log("connection to database SUCCESSFUL");
+  })
+  .catch((err) => {
+    console.log("couldn't connect to database :(");
+  });
+
+let localModel = new mongoose.Schema({
+  email: {
+    type: String,
+  },
+  phone: {
+    type: Number,
+  },
+  subject: {
+    type: String,
+  },
+  message: {
+    type: String,
+  },
+});
+
+let localSchema = mongoose.model(
+  "localization",
+  localModel,
+  "my-collection-name"
+);
 
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/public/contact.html");
@@ -36,6 +71,20 @@ app.post("/", (req, res) => {
       res.send("success");
     }
   });
+
+  localSchema
+    .insertMany({
+      email: `${req.body.email}`,
+      phone: `${req.body.phone}`,
+      subject: `${req.body.subject}`,
+      message: `${req.body.message}`,
+    })
+    .then(function () {
+      console.info("insert new data successfully");
+    })
+    .catch(function () {
+      console.error("has error when insert new data");
+    });
 });
 
 app.listen(PORT, () => {
